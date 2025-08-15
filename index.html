@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Active Points & Gift Boxes</title>
+  <style>
+    :root{
+      /* Neutral dark + gold accents */
+      --bg1:#0f1115; --bg2:#12141a;
+      --card:#16181d; --line:#242833;
+      --text:#e8ecf2; --muted:#9aa3b2;
+      --brand:#67b3ff; --brand2:#7cf2d6;  /* accent for primary CTAs */
+      --gold:#ffd970; --gold-deep:#e2b84b;
+      --buy1:#57e389; --buy2:#2bbd6b;
+      --warn1:#ffb86b; --warn2:#ffe27a;
+      --shadow:0 10px 24px rgba(0,0,0,.35);
+      --rareA:#ff90d8; --rareB:#a86bff;
+      --commonA:#2a313b; --commonB:#232a34;
+      --good:#79ffa9; --wait:#ffde7a; --bad:#ffa2a2;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial; color:var(--text);background:radial-gradient(1200px 600px at 50% -200px, #1a1f2b 0%, var(--bg2) 45%, #0e0f13 100%)}
+    .wrap{max-width:480px;margin:0 auto;padding:14px 14px 110px}
+
+    /* Top bar */
+    .topbar{display:flex;justify-content:space-between;gap:10px;margin:8px 0 12px}
+    .pill{flex:1;display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,#2a2f3a,#1d222c);padding:8px 10px;border-radius:22px;box-shadow:var(--shadow);border:1px solid #2f3441}
+    .pill .avatar{width:26px;height:26px;border-radius:50%;background:#222733;color:#d7e0f0;display:grid;place-items:center;border:1px solid #343b49}
+    .coins{display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,#232833,#1a202a);padding:8px 10px;border-radius:22px;border:1px solid #2f3441;box-shadow:var(--shadow)}
+    .coins .icon{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 28% 28%,#fff6 0,#0000 58%),linear-gradient(180deg,#ffe59a,#f1c644);box-shadow:inset 0 0 0 2px var(--gold-deep),0 2px 6px #0007}
+    .buy{margin-left:6px;padding:7px 12px;border:none;border-radius:18px;font-weight:800;color:#062a12;background:linear-gradient(180deg,var(--buy1),var(--buy2));box-shadow:var(--shadow)}
+
+    header{display:flex;align-items:center;gap:12px;margin:6px 2px 14px}
+    header .logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#5cd4ff,#8cf2d6);box-shadow:var(--shadow);display:grid;place-items:center;font-weight:800;color:#0f1530}
+    header h1{font-size:18px;margin:0}
+    header p{margin:0;font-size:12px;color:var(--muted)}
+
+    .card{background:linear-gradient(180deg,var(--card),#15181f);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .stat{background:linear-gradient(180deg,#15181f,#14181e);border:1px solid #262b36;border-radius:14px;padding:12px;display:flex;align-items:center;gap:10px}
+    .stat .label{font-size:12px;color:var(--muted)}
+    .stat .value{font-size:22px;font-weight:800;margin-top:2px;letter-spacing:.2px}
+    .ap-icon{flex:none;width:26px;height:26px;border-radius:6px;display:grid;place-items:center;background:linear-gradient(180deg,#191c22,#13161b);border:1px solid #2b313c;box-shadow:0 2px 6px #0007}
+    .ap-icon svg{width:22px;height:22px}
+
+    .actions{display:flex;gap:10px;margin-top:12px}
+    .btn{flex:1;display:inline-flex;justify-content:center;align-items:center;gap:8px;border:none;border-radius:12px;padding:12px 14px;font-size:15px;font-weight:800;color:#0f1220;background:linear-gradient(135deg,var(--brand),var(--brand2));box-shadow:var(--shadow)}
+    .btn:disabled{opacity:.5;filter:grayscale(.3);cursor:not-allowed}
+    .btn.secondary{color:var(--text);background:#222835;border:1px solid #2e3441}
+    .btn.warn{background:linear-gradient(135deg,var(--warn1),var(--warn2));color:#3b2a00}
+    .btn.hide{display:none}
+    .hint{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.4}
+
+    .section-title{display:flex;justify-content:space-between;align-items:center;margin:18px 2px 10px}
+    .section-title h2{font-size:16px;margin:0}
+    .section-title small{color:#cbd1ff22}
+
+    /* ===== Gift list ===== */
+    .pack-list{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .pack{position:relative;background:linear-gradient(180deg,var(--commonA),var(--commonB));border:1px solid #2f3642;border-radius:14px;padding:10px 10px 12px;overflow:hidden;transition:transform .2s}
+    .pack:hover{transform:translateY(-2px)}
+    .pack.rare{background:linear-gradient(180deg,rgba(255,144,216,.14),rgba(168,107,255,.10));border:1px solid #8e6af1;box-shadow:0 0 0 2px #ffb3f520,inset 0 0 0 1px #ffffff10}
+
+    /* Blue styling for COMMON */
+    .pack.common{background:linear-gradient(180deg,#18345a,#122544);border:1px solid #2a4d88;box-shadow:0 0 0 2px #2a4d8820,inset 0 0 0 1px #ffffff0f}
+    .chest.common{background:radial-gradient(220px 90px at 50% 0%, rgba(103,179,255,.18), transparent 60%),linear-gradient(180deg,#18233a,#141d31); border:1px solid #29406a}
+    .rarity.common{background:linear-gradient(180deg,#204a86,#173563); color:#d8e7ff;border-color:#3560a855}
+
+    .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .rarity{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid #ffffff18;background:#222836;color:#d7def0}
+    .rarity.rare{background:linear-gradient(180deg,#ffd6ff2b,#c39bff2b);color:#ffeaff;border-color:#ffd6ff55}
+    .tiny{font-size:11px;color:#cbd3e280}
+
+    .chest{width:100%;height:86px;border-radius:10px;display:grid;place-items:center;position:relative;background:linear-gradient(180deg,#1b2029,#151922);border:1px solid #2b3240}
+    .chest.rare{background:radial-gradient(220px 90px at 50% 0%, rgba(255,200,255,.22), transparent 60%),linear-gradient(180deg,#221833,#171428)}
+    .chest svg{width:70px;height:70px}
+
+    /* Subtle breathing glow */
+    @keyframes breathe{0%,100%{opacity:.03}50%{opacity:.22}}
+    .chest.breath::after{content:"";position:absolute;inset:-8px;border-radius:12px;background:radial-gradient(60% 55% at 50% 0%, var(--breath-color, rgba(255,255,255,.16)), transparent 62%);opacity:0;animation:breathe 3.4s ease-in-out infinite;pointer-events:none}
+    .chest.common.breath{--breath-color:rgba(103,179,255,.22)}
+    .chest.rare.breath{--breath-color:rgba(200,140,255,.24)}
+
+    .qmark{position:absolute;right:6px;top:6px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,#ffe59a,#f1c644);color:#3a2000;font-weight:900;border:2px solid var(--gold-deep);box-shadow:0 2px 6px #0006;cursor:pointer}
+
+    .row-actions{display:flex;gap:8px;margin-top:10px}
+
+    .empty{padding:20px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+
+    /* ===== Opening modal — recolored ===== */
+    .modal{position:fixed;inset:0;background:linear-gradient(180deg,rgba(6,8,11,.82),rgba(4,6,9,.72));backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:50}
+    .modal.show{display:flex}
+    .opener{width:92%;max-width:480px;background:linear-gradient(180deg,#161a20,#11151b);border:1px solid #2a3140;border-radius:18px;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+    .opener h3{color:#e6ecf7}
+    .reel{position:relative;background:#0f1319;border:1px solid #2a3140;border-radius:14px;padding:10px;margin-top:10px;overflow:hidden}
+    .track{display:flex;gap:10px;will-change:transform}
+    .slot{min-width:72px;height:72px;border-radius:12px;background:linear-gradient(180deg,#1a2028,#141a22);border:1px solid #2a3140;display:grid;place-items:center;font-weight:900;font-size:18px;color:var(--gold);text-shadow:0 2px 6px #0009}
+    .slot .coin-icon{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 28% 28%,#fff6 0,#0000 58%),linear-gradient(180deg,#ffe59a,#f1c644);box-shadow:inset 0 0 0 2px var(--gold-deep), 0 4px 10px #0008;margin-bottom:4px}
+    .slot .amt{font-size:13px;color:#ffe79a;font-weight:800}
+    .mask{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(10,12,16,.9),transparent 20%,transparent 80%,rgba(10,12,16,.9)),linear-gradient(180deg,transparent 70%,rgba(255,255,255,.04));}
+    .pointer{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:78px;height:78px;border:2px solid #b7c2d422;border-radius:14px;box-shadow:0 0 0 2px #b7c2d422, inset 0 0 0 2px #b7c2d422}
+    .modal .btn-row{display:flex;gap:10px;margin-top:12px}
+
+    /* Result popup — keep neat */
+    .result{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:60;background:radial-gradient(ellipse at center, rgba(18,20,26,.92) 0%, rgba(12,14,18,.92) 100%)}
+    .result.show{display:flex}
+    .result-card{width:92%;max-width:420px;background:linear-gradient(180deg,#171b22,#12161c);border:1px solid #2a3140;border-radius:20px;padding:18px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.6)}
+    .result-card .bigcoin{width:84px;height:84px;border-radius:50%;margin:6px auto;background:radial-gradient(circle at 28% 28%,#fff6 0,#0000 58%),linear-gradient(180deg,#ffe59a,#f1c644);box-shadow:inset 0 0 0 5px var(--gold-deep),0 8px 20px #0009}
+    .glow{animation:pulse 1.6s ease-in-out infinite}
+    .result h3{margin:10px 0 0;font-size:18px}
+    .result .amount{font-size:28px;font-weight:900;color:#ffd970;text-shadow:0 2px 10px #000}
+    .result .btn{margin-top:12px}
+
+    /* Exchange modal */
+    .x-modal .opener{background:linear-gradient(180deg,#171b22,#12161c);border-color:#2a3140}
+    .x-info{font-size:13px;color:#dfe4ff;margin:6px 0}
+    .x-row{display:flex;gap:10px}
+
+    @keyframes pulse{0%,100%{filter:drop-shadow(0 0 0 rgba(255,217,112,.0))}50%{filter:drop-shadow(0 0 18px rgba(255,217,112,.45))}}
+
+    /* confetti */
+    .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:65}
+    .confetti i{position:absolute;top:-10px;width:6px;height:10px;background:linear-gradient(180deg,#fff,#ddd);opacity:.9;animation:fall 1200ms linear forwards}
+    @keyframes fall{to{transform:translateY(110vh) rotate(360deg);opacity:1}}
+
+    /* coin fly animation */
+    .flying-coin{position:fixed;left:0;top:0;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 28% 28%,#fff6 0,#0000 58%),linear-gradient(180deg,#ffe59a,#f1c644);box-shadow:inset 0 0 0 2px var(--gold-deep),0 4px 10px #0008;z-index:80;transform:translate(-50%,-50%)}
+
+    /* Popover */
+    .popover{position:fixed;inset:auto auto 0 0;transform:translate(-9999px,-9999px);min-width:220px;max-width:260px;background:#11151c;border:1px solid #2a3140;border-radius:12px;padding:10px;box-shadow:0 14px 36px rgba(0,0,0,.5);z-index:70}
+    .popover.show{transform:none}
+    .popover h4{margin:0 0 6px;font-size:13px;color:#dfe6f3}
+    .popover p{margin:4px 0;font-size:12px;color:#b9c2d1}
+    .popover .tiny{color:#94a0b3}
+
+    /* Debug panel */
+    .debug{margin:16px auto 26px;max-width:480px}
+    .debug summary{cursor:pointer;background:#222835;color:#dfe6ff;padding:8px 12px;border-radius:10px;border:1px solid #2e3441}
+    .debug .panel{border:1px dashed #2e3441;border-radius:12px;padding:10px;margin-top:8px;background:#181c24}
+    .debug .panel .btn{flex:none}
+
+    .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#222835;border:1px solid #2e3441;border-radius:999px;color:#dfe6ff;padding:8px 14px;font-size:13px;box-shadow:var(--shadow);display:none;z-index:70}
+    .toast.show{display:block}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="pill"><div class="avatar">✨</div><small>Guest</small></div>
+      <div class="coins"><div class="icon"></div><strong id="coinBar">100,000</strong><button class="buy" id="buyBtn">BUY</button></div>
+    </div>
+
+    <header>
+      <div class="logo">AP</div>
+      <div>
+        <h1>Active Points & Gift Boxes</h1>
+        <p>Earn <b>Active Points</b> while playing. <b>Manual exchange:</b> every 1,000 AP → 1 Gift Box. Boxes appear below immediately. <b>Common</b> opens in 1h, <b>Rare</b> opens in 6h.</p>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="grid">
+        <div class="stat">
+          <div class="ap-icon" aria-label="Active Points icon">
+            <!-- Gold coin AP icon -->
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <linearGradient id="apGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#ffe59a"/>
+                  <stop offset="1" stop-color="#f1c644"/>
+                </linearGradient>
+              </defs>
+              <circle cx="12" cy="12" r="9" fill="url(#apGrad)" stroke="#e2b84b" stroke-width="2"/>
+              <path d="M7 16l2.2-6h1.6l2.2 6h-1.6l-.3-.9H8.9l-.3.9H7zm3-2.7h1.5L11 11l-1 2.3z" fill="#3a2a00"/>
+              <path d="M6.8 16H9c.8 0 1.4-.2 1.9-.6.5-.5.8-1.1.8-1.9 0-1.7-1.1-2.7-2.8-2.7H6.8V16zm1.6-1.4v-2.4h.4c.9 0 1.4.5 1.4 1.2s-.5 1.2-1.4 1.2h-.4z" fill="#3a2a00"/>
+            </svg>
+          </div>
+          <div>
+            <div class="label">Active Points</div>
+            <div class="value" id="points">0</div>
+          </div>
+        </div>
+        <div class="stat">
+          <div class="ap-icon">⇄</div>
+          <div>
+            <div class="label">Exchangeable Now</div>
+            <div class="value" id="exchangeable">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="grid" style="margin-top:10px">
+        <div class="stat">
+          <div class="ap-icon">☑</div>
+          <div>
+            <div class="label">Exchanged Today</div>
+            <div class="value" id="exchangedToday">0</div>
+          </div>
+        </div>
+        <div class="stat">
+          <div class="ap-icon">🎁</div>
+          <div>
+            <div class="label">My Gift Boxes</div>
+            <div class="value" id="totalPacks">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="openExchange">Exchange</button>
+      </div>
+      <p class="hint" id="needTip" style="display:none">You need at least 1,000 AP to exchange.</p>
+      <p class=\"hint\">This demo uses localStorage. In production, create boxes server‑side and return their type & unlock time.</p>
+    </section>
+
+    <div class="section-title">
+      <h2>My Gift Boxes</h2>
+      <small id="listHint">Sorted by time left · Rare first</small>
+    </div>
+    <section id="packContainer" class="pack-list"></section>
+    <div id="emptyList" class="empty" style="display:none">No gift boxes yet. Exchange 1,000 AP to get one.</div>
+  </div>
+
+  <!-- Exchange modal -->
+  <div class="modal x-modal" id="exchangeModal" aria-hidden="true">
+    <div class="opener">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0;font-size:16px">Exchange Active Points</h3>
+        <button class="btn secondary" id="xClose" style="flex:none;padding:8px 10px;border-radius:10px;font-size:13px">Close</button>
+      </div>
+      <p class="x-info">1,000 AP → 1 box. <b>Common</b>: opens in 1h. <b>Rare</b>: opens in 6h. Chance of rare is configurable.</p>
+      <div class="x-row">
+        <button class="btn warn" id="xOne">Exchange 1</button>
+        <button class="btn" id="xAll">Exchange All (<span id="xAllNum">0</span>)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Opening modal -->
+  <div class="modal" id="openModal" aria-hidden="true">
+    <div class="opener">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0;font-size:16px">Opening a Gift…</h3>
+        <button class="btn secondary" id="closeModal" style="flex:none;padding:8px 10px;border-radius:10px;font-size:13px">Close</button>
+      </div>
+      <div class="reel">
+        <div class="track" id="track"></div>
+        <div class="mask"></div>
+        <div class="pointer"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="claimBtn" disabled>Claim</button>
+      </div>
+      <p class="hint">Tiles show “?” first. Once spinning, coin amounts are visible; stopping highlights the winning one.</p>
+    </div>
+  </div>
+
+  <!-- Result screen for opening gift -->
+  <div class="result" id="result">
+    <div class="result-card">
+      <div class="bigcoin glow"></div>
+      <h3>Congratulations!</h3>
+      <p class="amount" id="resultAmt">+0</p>
+      <button class="btn" id="resultOk">OK</button>
+    </div>
+  </div>
+
+  <div class="confetti" id="confetti"></div>
+  <div class="toast" id="toast"></div>
+  <div id="popover" class="popover" role="dialog" aria-hidden="true"></div>
+
+  <!-- Debug panel -->
+  <details class="debug">
+    <summary>Debug Panel</summary>
+    <div class="panel" id="debugPanel">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn secondary" data-add="100">+100 AP</button>
+        <button class="btn secondary" data-add="500">+500 AP</button>
+        <button class="btn secondary" data-add="1000">+1000 AP</button>
+        <button class="btn secondary" id="ff1h">Fast‑forward +1h</button>
+        <button class="btn secondary" id="ff6h">Fast‑forward +6h</button>
+        <button class="btn warn" id="unlockAll">Unlock All</button>
+        <button class="btn secondary" id="reset">Reset Storage</button>
+      </div>
+      <p class="hint" style="margin-top:8px">Debug only. Fast‑forward adjusts all boxes' unlock time.</p>
+    </div>
+  </details>
+
+  <script>
+    // ===== Config & helpers =====
+    const LS_KEYS = { STATE: 'activePointsState:v10' };
+    const REWARDS_COMMON = [28,58,88,128,188,288,388];
+    const REWARDS_RARE   = [388,588,688,888,1088,1588];
+    const $ = s=>document.querySelector(s); const $$ = s=>Array.from(document.querySelectorAll(s));
+    const HOURS = h=>h*3600*1000; const now=()=>Date.now();
+    const RARE_RATE = 0.15; // tunable
+
+    // ===== State =====
+    const state = loadState();
+    let tickerId = null; let currentOpeningPack=null; let spinState=null; let currentSeq=[];
+    renderAll(); attachEvents(); startTicker();
+
+    function loadState(){
+      let s = localStorage.getItem(LS_KEYS.STATE);
+      if(s){ try{ s=JSON.parse(s) }catch{ s=null } }
+      if(!s){ s = { coins:100000, points: 0, packs: [] }; saveState(s); }
+      return s;
+    }
+    function saveState(s){ localStorage.setItem(LS_KEYS.STATE, JSON.stringify(s)); }
+
+    // ===== Rendering =====
+    function renderAll(){
+      $('#coinBar').textContent = Number(state.coins||0).toLocaleString();
+      $('#points').textContent = state.points.toLocaleString();
+      const exchangeableNow = Math.floor(state.points/1000);
+      $('#exchangeable').textContent = exchangeableNow;
+      const today = ymd(new Date());
+      const exToday = state.packs.filter(p=>ymd(new Date(p.createdAt))===today).length;
+      $('#exchangedToday').textContent = exToday;
+      $('#xAllNum').textContent = exchangeableNow;
+
+      // Enable/disable Exchange button + hint when AP is insufficient
+      const canExchange = exchangeableNow > 0;
+      const openBtn = $('#openExchange');
+      if(openBtn){ openBtn.disabled = !canExchange; openBtn.title = canExchange ? '' : 'You need at least 1,000 AP to exchange.'; }
+      const tipEl = $('#needTip'); if(tipEl){ tipEl.style.display = canExchange ? 'none' : 'block'; }
+
+      // Only show UNOPENED boxes, sorted by remaining time asc; rare first
+      const unopened = state.packs.filter(p=>!p.opened);
+      unopened.sort((a,b)=>{
+        const la = Math.max(0, a.unlockAt - now());
+        const lb = Math.max(0, b.unlockAt - now());
+        if(la !== lb) return la - lb; // time asc
+        const ra = (a.type==='rare')? 0:1; // rare first
+        const rb = (b.type==='rare')? 0:1;
+        if(ra !== rb) return ra - rb;
+        return (a.createdAt||0) - (b.createdAt||0); // older first tie-breaker
+      });
+
+      $('#totalPacks').textContent = unopened.length;
+      const listEl = $('#packContainer'); listEl.innerHTML = '';
+      $('#emptyList').style.display = unopened.length? 'none':'block';
+      for(const p of unopened){ listEl.appendChild(renderPackCard(p)); }
+    }
+
+    function renderChestSVG(type){
+      const isRare = type==='rare';
+      const lid = isRare? '#d9b4ff' : '#7fb2ff';
+      const body= isRare? '#b68cff' : '#5a8cff';
+      const stroke=isRare? '#8f6ae6' : '#3e6fd1';
+      return `
+        <svg viewBox="0 0 80 80" aria-hidden="true">
+          <g fill="none" stroke="${stroke}" stroke-width="2" stroke-linejoin="round">
+            <rect x="14" y="28" width="52" height="34" rx="6" fill="${body}"/>
+            <path d="M14 32h52"/>
+            <rect x="18" y="22" width="44" height="14" rx="6" fill="${lid}"/>
+            <rect x="38" y="40" width="4" height="10" rx="2" fill="#333"/>
+            <circle cx="40" cy="48" r="5" fill="#444"/>
+          </g>
+        </svg>`;
+    }
+
+    function renderPackCard(p){
+      const card = document.createElement('div');
+      card.className = `pack ${p.type}`;
+      const isLocked = p.unlockAt>now();
+      const rarityTag = `<span class="rarity ${p.type==='rare'?'rare':'common'}">${p.type==='rare'?'Rare':'Common'}</span>`;
+      const topStatus = isLocked? `<span class="tiny">Locked · opens in <b data-countdown="${p.id}">${fmtLeft(p.unlockAt-now())}</b></span>` : `<span class="tiny" style="color:${getCSS('--good')}">Ready</span>`;
+      const btnText = isLocked? 'Locked' : 'Open Gift';
+      const btnClass = isLocked? 'secondary':'warn';
+      const chest = `<div class="chest ${p.type} breath" data-pack="${p.id}">${renderChestSVG(p.type)}<div class="qmark" data-pop="${p.id}">?</div></div>`;
+      card.innerHTML = `
+        <div class="meta">${rarityTag}${topStatus}</div>
+        ${chest}
+        <div class="row-actions">
+          <button class="btn ${btnClass}" data-open data-id="${p.id}">${btnText}</button>
+        </div>`;
+      return card;
+    }
+
+    function getCSS(v){ return getComputedStyle(document.documentElement).getPropertyValue(v) }
+
+    // ===== Popover =====
+    function showPopover(targetEl, pack){
+      const pop = $('#popover');
+      const pool = pack.type==='rare'? REWARDS_RARE : REWARDS_COMMON;
+      const min = pool[0]; const max = pool[pool.length-1];
+      const leftMs = Math.max(0, pack.unlockAt-now());
+      pop.innerHTML = `<h4>${pack.type==='rare'?'Rare':'Common'} Box</h4>
+        <p>Coins Range: <b>${min}</b> – <b>${max}</b></p>
+        <p class="tiny">${leftMs>0? `Opens in ${fmtLeft(leftMs)}` : 'Ready to open now'}</p>`;
+      const r = targetEl.getBoundingClientRect();
+      const pad=8; const vw=window.innerWidth; const vh=window.innerHeight;
+      let x = r.left + r.width/2 - 120; let y = r.bottom + 8;
+      if(x < pad) x = pad; if(x+260 > vw-pad) x = vw - 260 - pad; if(y+120>vh-pad) y = r.top - 8 - 120;
+      pop.style.left = x+'px'; pop.style.top = y+'px';
+      pop.classList.add('show'); pop.setAttribute('aria-hidden','false');
+    }
+    function hidePopover(){ const pop=$('#popover'); pop.classList.remove('show'); pop.setAttribute('aria-hidden','true'); }
+
+    // ===== Events =====
+    function attachEvents(){
+      $('#openExchange').addEventListener('click',()=>{ $('#exchangeModal').classList.add('show'); $('#exchangeModal').setAttribute('aria-hidden','false'); renderAll(); });
+      $('#xClose').addEventListener('click',()=> closeExchange());
+      $('#xOne').addEventListener('click',()=> exchangeBoxes(1));
+      $('#xAll').addEventListener('click',()=> exchangeBoxes(Math.floor(state.points/1000)));
+
+      // Card actions
+      $('#packContainer').addEventListener('click',(e)=>{
+        const popBtn = e.target.closest('.qmark');
+        if(popBtn){ const id = popBtn.getAttribute('data-pop'); const pk = state.packs.find(p=>p.id===id); if(pk){ showPopover(popBtn, pk); } return; }
+        const btn = e.target.closest('button[data-open]');
+        if(btn){ const id=btn.getAttribute('data-id'); const pk=state.packs.find(p=>p.id===id); if(!pk) return; if(pk.unlockAt>now()){ toast('This box is still locked.'); return; } openPack(pk); return; }
+      });
+      document.addEventListener('click',(e)=>{ if(!e.target.closest('.popover') && !e.target.closest('.qmark')) hidePopover(); });
+
+      $('#closeModal').addEventListener('click', hideModal);
+      $('#claimBtn').addEventListener('click', ()=>claimReward());
+      $('#resultOk').addEventListener('click', ()=>{ $('#result').classList.remove('show'); });
+      $('#buyBtn').addEventListener('click',()=>toast('Hook BUY to your payment URL.'));
+
+      // Debug
+      $$('#debugPanel [data-add]').forEach(btn=> btn.addEventListener('click', ()=>{ const v=Number(btn.getAttribute('data-add')); state.points+=v; saveState(state); renderAll(); }));
+      $('#ff1h').addEventListener('click',()=>{ for(const p of state.packs){ p.unlockAt -= HOURS(1); } saveState(state); renderAll(); });
+      $('#ff6h').addEventListener('click',()=>{ for(const p of state.packs){ p.unlockAt -= HOURS(6); } saveState(state); renderAll(); });
+      $('#unlockAll').addEventListener('click',()=>{ for(const p of state.packs){ p.unlockAt = now()-1; } saveState(state); renderAll(); });
+      $('#reset').addEventListener('click',()=>{ localStorage.removeItem(LS_KEYS.STATE); location.reload(); });
+    }
+
+    function closeExchange(){ $('#exchangeModal').classList.remove('show'); $('#exchangeModal').setAttribute('aria-hidden','true'); }
+
+    function exchangeBoxes(count){
+      const can = Math.floor(state.points/1000);
+      if(count<=0 || can<=0){ toast('Not enough Active Points.'); return; }
+      const doCount = Math.min(count, can);
+      state.points -= 1000 * doCount;
+      let rareCount=0, commonCount=0;
+      for(let i=0;i<doCount;i++){
+        const type = Math.random()<RARE_RATE? 'rare':'common';
+        const cooldown = type==='rare'? HOURS(6):HOURS(1);
+        const pack = { id:`${Date.now()}-${Math.random().toString(36).slice(2,8)}`, type, createdAt: now(), unlockAt: now()+cooldown, opened:false };
+        state.packs.unshift(pack);
+        if(type==='rare') rareCount++; else commonCount++;
+      }
+      saveState(state); renderAll(); closeExchange();
+      // Light toast only (no modal)
+      toast(`Exchanged ${doCount} box${doCount>1?'es':''} — ${rareCount} rare, ${commonCount} common`);
+    }
+
+    // ===== Opening flow =====
+    function getPool(){ return (currentOpeningPack?.type==='rare')? REWARDS_RARE : REWARDS_COMMON }
+
+    function openPack(pack){
+      hidePopover();
+      currentOpeningPack = pack;
+      buildTrack();
+      $('#openModal').classList.add('show');
+      $('#openModal').setAttribute('aria-hidden','false');
+      const claim = $('#claimBtn'); if (claim) { claim.disabled = true; }
+      startSpin(); // auto-start spinning immediately
+    }
+    function hideModal(){
+      $('#openModal').classList.remove('show');
+      $('#openModal').setAttribute('aria-hidden','true');
+      // Cancel RAF safely by nulling the shared reference
+      spinState = null;
+      currentOpeningPack = null;
+      const claim=$('#claimBtn'); if(claim){ claim.disabled=true; }
+    }
+
+    function buildTrack(){
+      const track=$('#track'); track.innerHTML='';
+      const POOL=getPool(); currentSeq=[]; for(let r=0;r<8;r++){ for(const amt of POOL){ currentSeq.push(amt) } }
+      for(let i=0;i<currentSeq.length;i++){ const cell=document.createElement('div'); cell.className='slot'; cell.dataset.type='qm'; cell.dataset.amt=currentSeq[i]; cell.textContent='?'; track.appendChild(cell); }
+      track.style.transform='translateX(0)';
+    }
+
+    function revealSpinNumbers(){
+      $$('.slot').forEach((el)=>{ const v=el.dataset.amt; el.innerHTML = `<div class='coin-icon'></div><div class='amt'>${v}</div>`; el.dataset.type='num'; });
+    }
+
+    function startSpin(){
+      if(!currentOpeningPack) return;
+      const POOL=getPool();
+      const targetIdx = randInt(0, POOL.length-1);
+      const targetReward = POOL[targetIdx];
+      const track=$('#track'); const slots=$$('.slot'); if(!slots.length) return; const slotW=slots[0].offsetWidth+10; const visibleCenter=(document.querySelector('.reel').clientWidth)/2 - slotW/2;
+      const stopIndex = (POOL.length*6) + targetIdx; const stopX = -(stopIndex*slotW) + visibleCenter; const startX=0; const totalDist=stopX-startX; const duration=2200+Math.random()*600;
+      const easeOutCubic=t=>1-Math.pow(1-t,3);
+
+      // while spinning, keep claim disabled and show numbers
+      const claim=$('#claimBtn'); if(claim){ claim.disabled=true; }
+      revealSpinNumbers();
+
+      const s = { targetReward, startAt: performance.now(), duration, startX, totalDist, rafId: 0, stopIndex };
+      spinState = s; // shared ref used as a cancellation flag
+
+      const tick = (nowMs) => {
+        // Guard: if canceled or replaced, stop gracefully
+        if (spinState !== s) return;
+        const t = Math.min(1, (nowMs - s.startAt) / s.duration);
+        const eased = easeOutCubic(t);
+        const x = s.startX + s.totalDist * eased;
+        track.style.transform = `translateX(${x}px)`;
+        if (t < 1) {
+          s.rafId = requestAnimationFrame(tick);
+        } else {
+          // snap to grid
+          const snapped = Math.round((x - visibleCenter) / slotW) * slotW + visibleCenter;
+          track.style.transform = `translateX(${snapped}px)`;
+          $$('.slot').forEach((el,i)=>{
+            if(i===s.stopIndex){ el.innerHTML=`<div class='coin-icon'></div><div class='amt'>${targetReward}</div>`; el.dataset.type='coin'; }
+            else { el.innerHTML=`<div class='coin-icon'></div><div class='amt'>${el.dataset.amt}</div>`; el.dataset.type='num'; }
+          });
+          if(claim){ claim.disabled=false; }
+        }
+      };
+      s.rafId = requestAnimationFrame(tick);
+    }
+
+    function claimReward(opts={effects:true}){
+      if(!currentOpeningPack||!spinState) return;
+      const reward = spinState.targetReward ?? 0;
+      currentOpeningPack.opened=true; currentOpeningPack.reward=reward; currentOpeningPack.openedAt=now();
+      state.coins=(state.coins||0)+reward; saveState(state); renderAll();
+      hideModal(); if(opts.effects){ showResult(reward); fireConfetti(); flyCoinToTop(); }
+    }
+
+    // ===== Utilities =====
+    function ymd(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` }
+    function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min }
+    function fmtLeft(ms){ const s=Math.ceil(ms/1000); const h=Math.floor(s/3600); const m=Math.floor((s%3600)/60); const ss=s%60; return `${h}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}` }
+    function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._tid); t._tid=setTimeout(()=>t.classList.remove('show'),2000); }
+
+    // ticker for countdowns + hide popover when time changes state
+    function startTicker(){ if(tickerId) cancelAnimationFrame(tickerId); const tick=()=>{ $$('[data-countdown]').forEach(el=>{ const id=el.getAttribute('data-countdown'); const p=state.packs.find(x=>x.id===id); if(!p) return; const left=p.unlockAt-now(); if(left>0){ el.textContent=fmtLeft(left);} else { renderAll(); hidePopover(); } }); tickerId=requestAnimationFrame(()=>{ setTimeout(()=>tick(),1000); }); }; tick(); }
+
+    // ===== Tests =====
+    ;(function runTests(){
+      try{
+        const snapshot = JSON.stringify(state);
+        const beforeBoxes = state.packs.length;
+        state.points = 2500; saveState(state);
+        exchangeBoxes(1);
+        const after1 = JSON.parse(localStorage.getItem(LS_KEYS.STATE));
+        console.assert(after1.packs.length === beforeBoxes+1, 'Exchange 1 should create 1 box');
+        console.assert(after1.points === 1500, 'Exchange should deduct 1000 AP');
+        const p2 = state.packs[0]; p2.unlockAt = now()-1; saveState(state);
+        const prevCoins = state.coins; openPack(p2); buildTrack(); spinState={targetReward:128}; claimReward({effects:false});
+        const afterOpen = JSON.parse(localStorage.getItem(LS_KEYS.STATE));
+        console.assert(afterOpen.packs[0].opened===true, 'After claimReward, box should be opened');
+        console.assert(afterOpen.coins >= prevCoins, 'Coins should increase after opening');
+        
+        // Additional tests
+        // 1) Opened boxes are hidden from list
+        const shownCount = afterOpen.packs.filter(p=>!p.opened).length; renderAll();
+        console.assert(Number(document.getElementById('totalPacks').textContent) === shownCount, 'Only unopened boxes should be counted/displayed');
+        
+        // 2) Sorting rule: with same remaining time, rare comes before common
+        const baseTime = now()+HOURS(1);
+        const rareBox = {id:'test-rare', type:'rare', createdAt:now(), unlockAt:baseTime, opened:false};
+        const commonBox = {id:'test-common', type:'common', createdAt:now(), unlockAt:baseTime, opened:false};
+        state.packs.unshift(commonBox); state.packs.unshift(rareBox); saveState(state); renderAll();
+        const firstCard = document.querySelector('#packContainer .pack');
+        console.assert(firstCard && firstCard.classList.contains('rare'), 'Rare should appear before common when time is equal');
+
+        // 3) Closing modal during spin should not throw (guard against null spinState)
+        const testBox = {id:'spin-cancel', type:'common', createdAt:now(), unlockAt:now()-1, opened:false};
+        state.packs.unshift(testBox); saveState(state); renderAll();
+        let noThrow = true;
+        try { openPack(testBox); startSpin(); hideModal(); } catch(e) { noThrow = false; }
+        console.assert(noThrow, 'Hiding modal mid-spin should not throw');
+
+        // 5) Breathing glow class exists on chests
+        const chestEl = document.querySelector('#packContainer .chest');
+        console.assert(chestEl && chestEl.classList.contains('breath'), 'Chest should have subtle breathing glow class');
+        
+        // 4) Exchange button disabled + hint when not enough AP
+        state.points = 0; saveState(state); renderAll();
+        console.assert(document.getElementById('openExchange').disabled === true, 'Exchange button should be disabled when < 1000 AP');
+        console.assert(document.getElementById('needTip').style.display !== 'none', 'Need tip should be visible when insufficient AP');
+        state.points = 1000; saveState(state); renderAll();
+        console.assert(document.getElementById('openExchange').disabled === false, 'Exchange button enabled when >= 1000 AP');
+        console.assert(document.getElementById('needTip').style.display === 'none', 'Need tip hidden when enough AP');
+        
+        // restore
+        Object.assign(state, JSON.parse(snapshot)); saveState(state); renderAll();
+        console.log('%cTests passed','color:#0f0');
+      }catch(e){ console.warn('Tests failed', e); }
+    })();
+
+    // ===== Win result & effects =====
+    function showResult(amount){ $('#resultAmt').textContent = `+${Number(amount).toLocaleString()} coins`; $('#result').classList.add('show'); }
+    function fireConfetti(){ const root=$('#confetti'); root.innerHTML=''; const colors=['#ffd970','#7cf2d6','#67b3ff','#ff7aa8','#ffffff']; for(let i=0;i<60;i++){ const dot=document.createElement('i'); dot.style.left=Math.random()*100+'%'; dot.style.background=colors[i%colors.length]; dot.style.transform=`rotate(${Math.random()*360}deg)`; dot.style.animationDuration=(900+Math.random()*800)+'ms'; root.appendChild(dot);} setTimeout(()=>root.innerHTML='',1800); }
+    function flyCoinToTop(){ const start={x:window.innerWidth/2,y:window.innerHeight/2}; const bar=$('#coinBar').getBoundingClientRect(); const end={x:bar.left+bar.width/2,y:bar.top+bar.height/2}; const el=document.createElement('div'); el.className='flying-coin'; document.body.appendChild(el); el.style.left=start.x+'px'; el.style.top=start.y+'px'; el.animate([{transform:'translate(-50%,-50%) scale(1)', opacity:1},{transform:`translate(${end.x-start.x}px,${end.y-start.y}px) scale(.6)`, opacity:0.1}], {duration:700, easing:'cubic-bezier(.2,.8,.2,1)'}).onfinish=()=>{ el.remove(); }; }
+  </script>
+</body>
+</html>
